@@ -6,7 +6,7 @@ demo:
     - poetry config virtualenvs.in-project true # for caching
     - poetry install --no-interaction --no-ansi
   tags:
-    - ins-internal
+    - ins-student
   image: python:3.9
   script: poetry run netaut --help
   cache:
