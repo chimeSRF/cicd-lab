@@ -37,8 +37,8 @@
 
 
 
-environment variable
----
+## Environment Variable
+
 
 ```
 NORNIR_PASSWORD=*****       # password for the user ins
@@ -47,4 +47,6 @@ LAB_POD_NUMBER=9            # INS Pod number
 ```
 
 
+# ToDo
 
+Create the CI/CD pipeline
