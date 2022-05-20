@@ -1,0 +1,61 @@
+import typer
+from rich.console import Console
+from nornir import InitNornir
+from nornir_utils.plugins.functions import print_result
+
+from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp
+
+app = typer.Typer()
+console = Console()
+
+
+@app.callback()
+def get_nornir(
+    ctx: typer.Context,
+    configuration_file: typer.FileText = typer.Option(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        metavar="NORNIR_SETTINGS",
+        help="Path to the nornir configuration file.",
+    ),
+    pod_number: int = typer.Option(..., help="Pod number to use.", metavar="LAB_POD_NUMBER"),
+) -> None:
+    """
+    Get nornir object from configuration file
+    """
+    nr = InitNornir(config_file=configuration_file)
+    for host in nr.inventory.hosts:
+        nr.inventory.hosts[host].hostname = f"{host}-pod-{pod_number}.lab.ins.hsr.ch"
+    ctx.obj = nr
+
+
+@app.command()
+def get_config(ctx: typer.Context) -> None:
+    """Get XML"""
+    nr = ctx.obj
+    print_result(nr.run(task=get_vrf_ospf_bgp))
+    console.print("RPCs")
+
+
+@app.command()
+def validate(ctx: typer.Context) -> None:
+    """Load configuration into candidate store and exit with validate"""
+    nr = ctx.obj
+    console.print(f"validated")
+    raise typer.Exit(code=0)
+
+
+@app.command()
+def deploy(ctx: typer.Context) -> None:
+    """Deploy configuration into running store"""
+    nr = ctx.obj
+    console.print(f"Deploy failed")
+    raise typer.Exit(code=1)
+
+
+if __name__ == "__main__":
+    app()

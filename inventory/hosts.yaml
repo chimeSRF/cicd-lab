@@ -1,0 +1,16 @@
+---
+sw01:
+  groups:
+    - iosxe
+
+sw02:
+  groups:
+    - iosxe
+
+sw03:
+  groups:
+    - iosxe
+
+sw04:
+  groups:
+    - iosxe
