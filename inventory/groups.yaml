@@ -1,4 +1,6 @@
 ---
+# Devices
+
 iosxe:
   username: ins
   platform: iosxe
@@ -10,3 +12,103 @@ iosxe:
         timeout: 300
         allow_agent: false
         look_for_keys: false
+
+
+
+# Definitions
+.vrf_definitions:
+  vrfs:
+    students: &students
+      description: "Students VRF"
+      id: 10  # RD will be <Loopback0>:10
+      import:
+        - !!str 10:0
+      export:
+        - !!str 10:0
+    lab_ext: &lab_ext
+      description: "Lab-ext VRF"
+      id: 20  # RD will be <Loopback0>:20
+      import:
+        - !!str 20:0
+      export:
+        - !!str 20:0
+    lab_int: &lab_int
+      description: "Lab-int VRF"
+      id: 30  # RD will be <Loopback0>:30
+      import:
+        - !!str 30:0
+      export:
+        - !!str 30:0
+    external: &external
+      description: "External VRF"
+      id: 40  # RD will be <Loopback0>:40
+      import:
+        - !!str 40:0
+      export:
+        - !!str 40:0
+    internal: &internal
+      description: "Internal VRF"
+      id: 50  # RD will be <Loopback0>:50
+      import:
+        - !!str 50:0
+      export:
+        - !!str 50:0
+
+
+
+# Locations
+
+rapperswil:
+  vrfs:
+    students: *students
+    lab_ext: *lab_ext
+    lab_int: *lab_int
+    external: *external
+    internal: *internal
+  nets:
+    student_net_1:
+      vrf: students
+      name: student network 1
+      vlan: 100
+      network: 10.0.0.0/24
+    student_net_2:
+      vrf: students
+      name: student network 2
+      vlan: 101
+      network: 10.0.1.0/24
+    lab_ext:
+      vrf: lab_ext
+      name: lab external network
+      vlan: 102
+      network: 10.0.2.0/24
+    lab_int:
+      vrf: lab_int
+      name: lab internal network
+      vlan: 103
+      network: 10.0.3.0/24
+    external:
+      vrf: external
+      name: external network
+      vlan: 104
+      network: 10.0.4.0/24
+    internal:
+      vrf: internal
+      name: internal network
+      vlan: 105
+      network: 10.0.5.0/24
+
+sg:
+  vrfs:
+    students: *students
+    lab_int: *lab_int
+  nets:
+    student_net_1:
+      vrf: students
+      name: student network
+      vlan: 100
+      network: 10.0.6.0/24
+    lab_int:
+      vrf: lab_int
+      name: lab internal network
+      vlan: 101
+      network: 10.0.7.0/24

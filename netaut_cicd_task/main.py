@@ -22,12 +22,16 @@ def get_nornir(
         metavar="NORNIR_SETTINGS",
         help="Path to the nornir configuration file.",
     ),
-    pod_number: int = typer.Option(..., help="Pod number to use.", metavar="LAB_POD_NUMBER"),
+    pod_number: int = typer.Option(
+        ..., help="Pod number to use.", metavar="LAB_POD_NUMBER"
+    ),
 ) -> None:
     """
     Get nornir object from configuration file
     """
     nr = InitNornir(config_file=configuration_file)
+
+    # Hack to set the hostnames according to the pod number
     for host in nr.inventory.hosts:
         nr.inventory.hosts[host].hostname = f"{host}-pod-{pod_number}.lab.ins.hsr.ch"
     ctx.obj = nr

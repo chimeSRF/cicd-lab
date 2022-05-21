@@ -26,12 +26,11 @@ def get_vrf_ospf_bgp(task: Task) -> Result:
 
 def configure(task: Task, candidate: bool = True):
     ...
-    
+
     # ToDo: Send OSPF config
-    
+
     # ToDo: Send VRF config
-    
+
     # ToDo: Send BGP config
 
-    # ToDo: Send interface config 
-
+    # ToDo: Send interface config
