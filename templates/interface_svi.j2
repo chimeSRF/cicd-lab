@@ -1,0 +1,19 @@
+<Vlan>
+    <name>{{ svi.vlan }}</name>
+    <vrf>
+        <forwarding>{{ svi.vrf }}</forwarding>
+    </vrf>
+    <ip>
+        <address>
+            <primary>
+                <address>{{ svi.network | first_host }}</address>
+                <mask>{{ svi.network | networkmask }}</mask>
+            </primary>
+        </address>
+    </ip>
+    <logging>
+        <event>
+            <link-status/>
+        </event>
+    </logging>
+</Vlan>

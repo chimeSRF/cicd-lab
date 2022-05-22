@@ -1,0 +1,63 @@
+<interface>
+    <Loopback>
+        <name>0</name>
+        <ip>
+            <address>
+                <primary>
+                    <address>{{ host["Loopback0"] }}</address>
+                    <mask>255.255.255.255</mask>
+                </primary>
+            </address>
+            <router-ospf xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-ospf">
+                <ospf>
+                    <process-id>
+                        <id>1</id>
+                        <area>
+                            <area-id>0</area-id>
+                        </area>
+                    </process-id>
+                </ospf>
+            </router-ospf>
+        </ip>
+        <logging>
+            <event>
+                <link-status/>
+            </event>
+        </logging>
+    </Loopback>
+{% for interface_longname, interface in  host["interfaces"].items() %}
+{% set interface_type, interface_name = interface_longname | split_interface %}
+<{{ interface_type }}>
+    <name>{{ interface_name }}</name>
+    {% if interface.description is defined %}
+    <description>{{ interface.description }}</description>
+    {% endif %}
+    {% if interface %}
+        {% if interface["type"] == "backbone"%}
+            {% include "interface_backbone.j2" +%}
+        {% elif interface["type"] == "access"%}
+            {% include "interface_access.j2" +%}
+        {% endif %}
+    {% else %}
+        {% include "interface_disabled.j2" +%}
+    {% endif %}
+    <logging>
+        <event>
+            <link-status/>
+        </event>
+    </logging>
+    <cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-cdp">
+        <tlv>
+            <app/>
+            <server-location/>
+            <location/>
+        </tlv>
+    </cdp>
+</{{ interface_type }}>
+{% endfor %}
+{% if "nets" in host %}
+{% for svi in host["nets"].values() %}
+    {% include "interface_svi.j2" +%}
+{% endfor %}
+{% endif %}
+</interface>

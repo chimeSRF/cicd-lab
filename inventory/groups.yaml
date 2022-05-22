@@ -59,56 +59,58 @@ iosxe:
 # Locations
 
 rapperswil:
-  vrfs:
-    students: *students
-    lab_ext: *lab_ext
-    lab_int: *lab_int
-    external: *external
-    internal: *internal
-  nets:
-    student_net_1:
-      vrf: students
-      name: student network 1
-      vlan: 100
-      network: 10.0.0.0/24
-    student_net_2:
-      vrf: students
-      name: student network 2
-      vlan: 101
-      network: 10.0.1.0/24
-    lab_ext:
-      vrf: lab_ext
-      name: lab external network
-      vlan: 102
-      network: 10.0.2.0/24
-    lab_int:
-      vrf: lab_int
-      name: lab internal network
-      vlan: 103
-      network: 10.0.3.0/24
-    external:
-      vrf: external
-      name: external network
-      vlan: 104
-      network: 10.0.4.0/24
-    internal:
-      vrf: internal
-      name: internal network
-      vlan: 105
-      network: 10.0.5.0/24
+  data:
+    vrfs:
+      students: *students
+      lab_ext: *lab_ext
+      lab_int: *lab_int
+      external: *external
+      internal: *internal
+    nets:
+      student_net_1:
+        vrf: students
+        name: student network 1
+        vlan: 100
+        network: 10.0.0.0/24
+      student_net_2:
+        vrf: students
+        name: student network 2
+        vlan: 101
+        network: 10.0.1.0/24
+      lab_ext:
+        vrf: lab_ext
+        name: lab external network
+        vlan: 102
+        network: 10.0.2.0/24
+      lab_int:
+        vrf: lab_int
+        name: lab internal network
+        vlan: 103
+        network: 10.0.3.0/24
+      external:
+        vrf: external
+        name: external network
+        vlan: 104
+        network: 10.0.4.0/24
+      internal:
+        vrf: internal
+        name: internal network
+        vlan: 105
+        network: 10.0.5.0/24
 
 sg:
-  vrfs:
-    students: *students
-    lab_int: *lab_int
-  nets:
-    student_net_1:
-      vrf: students
-      name: student network
-      vlan: 100
-      network: 10.0.6.0/24
-    lab_int:
-      vrf: lab_int
-      name: lab internal network
-      vlan: 101
-      network: 10.0.7.0/24
+  data:
+    vrfs:
+      students: *students
+      lab_int: *lab_int
+    nets:
+      student_net_1:
+        vrf: students
+        name: student network
+        vlan: 100
+        network: 10.0.6.0/24
+      lab_int:
+        vrf: lab_int
+        name: lab internal network
+        vlan: 101
+        network: 10.0.7.0/24

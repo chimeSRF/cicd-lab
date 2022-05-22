@@ -3,7 +3,7 @@ from rich.console import Console
 from nornir import InitNornir
 from nornir_utils.plugins.functions import print_result
 
-from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp
+from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp, desired_rpc
 
 app = typer.Typer()
 console = Console()
@@ -57,8 +57,16 @@ def validate(ctx: typer.Context) -> None:
 def deploy(ctx: typer.Context) -> None:
     """Deploy configuration into running store"""
     nr = ctx.obj
+    print_result(nr.run(task=desired_rpc, nr=nr))
     console.print(f"Deploy failed")
     raise typer.Exit(code=1)
+
+
+@app.command()
+def desired_state(ctx: typer.Context) -> None:
+    """Get desired state"""
+    nr = ctx.obj
+    print_result(nr.run(task=desired_rpc, nr=nr))
 
 
 if __name__ == "__main__":

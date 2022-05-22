@@ -1,0 +1,31 @@
+<vrf>
+    <definition>
+        <name>Mgmt-vrf</name>
+        <address-family>
+            <ipv4/>
+            <ipv6/>
+        </address-family>
+    </definition>
+{% for name, vrf in host["vrfs"].items() %}
+    <definition>
+        <name>{{ name }}</name>
+        <description>{{ vrf.description }}</description>
+        <rd>{{ host["Loopback0"] }}:{{ vrf.id }}</rd>
+        <address-family>
+            <ipv4/>
+        </address-family>
+        <route-target>
+    {% for export in vrf.export %}
+            <export>
+                <asn-ip>{{ export }}</asn-ip>
+            </export>
+    {% endfor %}
+    {% for import in vrf.import %}
+            <import>
+                <asn-ip>{{ import }}</asn-ip>
+            </import>
+    {% endfor %}
+        </route-target>
+    </definition>
+{% endfor %}
+</vrf>

@@ -1,0 +1,53 @@
+<bgp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-bgp">
+    <id>65000</id>
+    <bgp>
+        <default>
+            <ipv4-unicast>false</ipv4-unicast>
+        </default>
+        <log-neighbor-changes>true</log-neighbor-changes>
+    </bgp>
+    {% if "rr" in host["tags"] %}
+    {% set neighbors = edge_hosts %}
+    {% else %}
+    {% set neighbors = rr_hosts %}
+    {% endif %}
+    {% for neighbor in neighbors.values() %}
+    <neighbor>
+        <id>{{ neighbor["Loopback0"] }}</id>
+        <remote-as>65000</remote-as>
+        <password>
+            <enctype>7</enctype>
+            <text>021501581E140A61</text>
+        </password>
+        <update-source>
+            <interface>
+                <Loopback>0</Loopback>
+            </interface>
+        </update-source>
+    </neighbor>
+    {% endfor %}
+    <address-family>
+        <no-vrf>
+            <ipv4>
+                <af-name>unicast</af-name>
+            </ipv4>
+            <vpnv4>
+                <af-name>unicast</af-name>
+                <vpnv4-unicast>
+                    {% for neighbor in neighbors.values() %}
+                    <neighbor>
+                        <id>{{ neighbor["Loopback0"] }}</id>
+                        <activate/>
+                        {% if "rr" in host["tags"] %}
+                        <route-reflector-client/>
+                        {% endif %}
+                        <send-community>
+                            <send-community-where>both</send-community-where>
+                        </send-community>
+                    </neighbor>
+                    {% endfor %}
+                </vpnv4-unicast>
+            </vpnv4>
+        </no-vrf>
+    </address-family>
+</bgp>

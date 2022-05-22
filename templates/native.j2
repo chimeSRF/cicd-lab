@@ -1,0 +1,10 @@
+<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+{% include "vrf.j2" +%}
+{% include "interfaces.j2" +%}
+<router>
+{% if "edge" in host["tags"] or "RR" in host["tags"] %}
+{% include "bgp.j2" +%}
+{% endif %}
+{% include "ospf.j2" +%}
+</router>
+</native>

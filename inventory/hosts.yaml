@@ -3,6 +3,9 @@ sw01:
   groups:
     - iosxe
   data:
+    tags:
+      - RR
+      - core
     id: 1
     Loopback0: 100.64.255.1
     interfaces:
@@ -42,6 +45,8 @@ sw02:
   groups:
     - iosxe
   data:
+    tags:
+      - core
     id: 2
     Loopback0: 100.64.255.2
     interfaces:
@@ -80,7 +85,10 @@ sw02:
 sw03:
   groups:
     - iosxe
+    - rapperswil
   data:
+    tags:
+      - edge
     id: 3
     Loopback0: 100.64.255.3
     interfaces:
@@ -119,7 +127,10 @@ sw03:
 sw04:
   groups:
     - iosxe
+    - sg
   data:
+    tags:
+      - edge
     id: 4
     Loopback0: 100.64.255.4
     interfaces:

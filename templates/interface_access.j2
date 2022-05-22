@@ -1,0 +1,10 @@
+    <switchport>
+        <access xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-switch">
+            <vlan>
+                <vlan>{{ host["nets"][interface.network]["vlan"] }}</vlan>
+            </vlan>
+        </access>
+        <mode xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-switch">
+            <access/>
+        </mode>
+    </switchport>
