@@ -1,5 +1,6 @@
+from typing import Union
 from nornir.core import Nornir
-from nornir.core.task import Result, Task
+from nornir.core.task import Result, MultiResult, Task
 from nornir.core.filter import F
 from nornir_netconf.plugins.tasks import netconf_get_config
 from nornir_jinja2.plugins.tasks import template_file
@@ -13,9 +14,10 @@ finja_filter = {
 }
 
 
-def get_vrf_ospf_bgp(task: Task) -> Result:
+def get_vrf_ospf_bgp(task: Task) -> None:
     subtree_filter = """<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
         <vrf/>
+        <vlan/>
         <interface>
           <GigabitEthernet/>
           <Loopback/>
@@ -27,7 +29,7 @@ def get_vrf_ospf_bgp(task: Task) -> Result:
         </router>
       </native>"""
 
-    return task.run(
+    task.run(
         netconf_get_config,
         source="running",
         path=subtree_filter,
@@ -35,9 +37,9 @@ def get_vrf_ospf_bgp(task: Task) -> Result:
     )
 
 
-def desired_rpc(task: Task, nr: Nornir) -> Result:
-    rr_hosts = nr.filter(F(tags__contains="RR")).inventory.hosts
-    edge_hosts = nr.filter(F(tags__contains="edge")).inventory.hosts
+def desired_rpc(task: Task, nr: Nornir) -> Union[Result, MultiResult]:
+    rr_hosts = nr.filter(F(tags__contains="RR")).inventory.hosts  # type: ignore
+    edge_hosts = nr.filter(F(tags__contains="edge")).inventory.hosts  # type: ignore
     native = task.run(
         template_file,
         template="native.j2",

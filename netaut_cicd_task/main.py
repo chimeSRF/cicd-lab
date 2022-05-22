@@ -29,7 +29,7 @@ def get_nornir(
     """
     Get nornir object from configuration file
     """
-    nr = InitNornir(config_file=configuration_file)
+    nr = InitNornir(config_file=str(configuration_file))
 
     # Hack to set the hostnames according to the pod number
     for host in nr.inventory.hosts:
