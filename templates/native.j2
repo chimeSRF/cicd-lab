@@ -1,6 +1,8 @@
+<config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
 <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
 {% include "vrf.j2" +%}
 {% include "interfaces.j2" +%}
+<ip><routing-conf><routing>true</routing></routing-conf></ip>
 <router>
 {% if "edge" in host["tags"] or "RR" in host["tags"] %}
 {% include "bgp.j2" +%}
@@ -8,3 +10,4 @@
 {% include "ospf.j2" +%}
 </router>
 </native>
+</config>

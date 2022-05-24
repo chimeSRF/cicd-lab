@@ -27,7 +27,7 @@
     </Loopback>
 {% for interface_longname, interface in  host["interfaces"].items() %}
 {% set interface_type, interface_name = interface_longname | split_interface %}
-<{{ interface_type }}>
+<{{ interface_type }} xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" nc:operation="replace">
     <name>{{ interface_name }}</name>
     {% if interface.description is defined %}
     <description>{{ interface.description }}</description>

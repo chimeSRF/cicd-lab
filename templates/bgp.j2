@@ -6,7 +6,7 @@
         </default>
         <log-neighbor-changes>true</log-neighbor-changes>
     </bgp>
-    {% if "rr" in host["tags"] %}
+    {% if "RR" in host["tags"] %}
     {% set neighbors = edge_hosts %}
     {% else %}
     {% set neighbors = rr_hosts %}

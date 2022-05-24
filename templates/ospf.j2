@@ -1,13 +1,7 @@
 <router-ospf xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-ospf">
     <ospf>
-        <process-id>
+        <process-id xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" nc:operation="replace">
             <id>1</id>
-            <area>
-                <area-id>0</area-id>
-                <authentication>
-                    <message-digest/>
-                </authentication>
-            </area>
             <auto-cost>
                 <reference-bandwidth>200000</reference-bandwidth>
             </auto-cost>
