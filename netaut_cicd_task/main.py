@@ -21,9 +21,13 @@ def get_nornir(
         resolve_path=True,
         metavar="NORNIR_SETTINGS",
         help="Path to the nornir configuration file.",
+        envvar="NORNIR_SETTINGS",
     ),
     pod_number: int = typer.Option(
-        ..., help="Pod number to use.", metavar="LAB_POD_NUMBER"
+        ...,
+        help="Pod number to use.",
+        metavar="LAB_POD_NUMBER",
+        envvar="LAB_POD_NUMBER",
     ),
 ) -> None:
     """
