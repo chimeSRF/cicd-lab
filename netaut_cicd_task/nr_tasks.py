@@ -89,17 +89,19 @@ def diff(task: Task, running: MultiResult, candidate: MultiResult) -> Result:
         "F": 0.5,
         "uniqueattrs": [
             "{http://www.w3.org/XML/1998/namespace}id",
-            "{http://cisco.com/ns/yang/Cisco-IOS-XE-native}name",
         ],
+        "ratio_mode": "accurate",
     }
+    running = running[0].result["rpc"].data  # type: ignore
+    candidate = candidate[0].result["rpc"].data  # type: ignore
 
     diff = xmldiff_main.diff_trees(
-        running[0].result["rpc"].data,  # type: ignore
-        candidate[0].result["rpc"].data,  # type: ignore
+        running,
+        candidate,
         diff_options=diff_options,
     )
 
-    return Result(task.host, result=diff, failed=False)
+    return Result(task.host, result=diff or "No diff", failed=False)
 
 
 def edit_config(task: Task, nr: Nornir) -> None:
