@@ -71,7 +71,8 @@ def get_vrf_ospf_bgp(task: Task) -> None:
     )
 
 
-def desired_rpc(task: Task, nr: Nornir) -> None:
+def desired_rpc(task: Task) -> None:
+    nr = task.nornir
     rr_hosts = nr.filter(F(tags__contains="RR")).inventory.hosts  # type: ignore
     edge_hosts = nr.filter(F(tags__contains="edge")).inventory.hosts  # type: ignore
     task.run(
@@ -104,8 +105,8 @@ def diff(task: Task, running: MultiResult, candidate: MultiResult) -> Result:
     return Result(task.host, result=diff or "No diff", failed=False)
 
 
-def edit_config(task: Task, nr: Nornir) -> None:
-    desired_result = task.run(desired_rpc, nr=nr, severity_level=DEBUG)
+def edit_config(task: Task) -> None:
+    desired_result = task.run(desired_rpc, severity_level=DEBUG)
     task.run(discard_config, severity_level=DEBUG)
     task.run(
         netconf_lock,
