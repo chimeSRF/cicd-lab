@@ -1,5 +1,6 @@
+from logging import DEBUG
 from nornir.core import Nornir
-from nornir.core.task import Task, Result
+from nornir.core.task import Task, Result, MultiResult
 from nornir.core.filter import F
 from nornir_netconf.plugins.tasks import (
     netconf_get_config,
@@ -8,6 +9,7 @@ from nornir_netconf.plugins.tasks import (
     netconf_lock,
 )
 from nornir_jinja2.plugins.tasks import template_file
+from xmldiff import main as xmldiff_main
 
 from netaut_cicd_task.filter import split_interface, first_host, networkmask
 
@@ -82,26 +84,68 @@ def desired_rpc(task: Task, nr: Nornir) -> None:
     )
 
 
-def edit_config(task: Task, nr: Nornir, candidate: bool = True) -> None:
-    desired_result = task.run(desired_rpc, nr=nr)
-    # task.run(netconf_lock, datastore="candidate", operation="lock")
-    task.run(discard_config)
+def diff(task: Task, running: MultiResult, candidate: MultiResult) -> Result:
+    diff_options = {
+        "F": 0.5,
+        "uniqueattrs": [
+            "{http://www.w3.org/XML/1998/namespace}id",
+            "{http://cisco.com/ns/yang/Cisco-IOS-XE-native}name",
+        ],
+    }
+
+    diff = xmldiff_main.diff_trees(
+        running[0].result["rpc"].data,  # type: ignore
+        candidate[0].result["rpc"].data,  # type: ignore
+        diff_options=diff_options,
+    )
+
+    return Result(task.host, result=diff, failed=False)
+
+
+def edit_config(task: Task, nr: Nornir) -> None:
+    desired_result = task.run(desired_rpc, nr=nr, severity_level=DEBUG)
+    task.run(discard_config, severity_level=DEBUG)
+    task.run(
+        netconf_lock,
+        datastore="candidate",
+        operation="lock",
+        severity_level=DEBUG,
+        name="lock_candidate",
+    )
     task.run(
         netconf_edit_config,
         config=desired_result[1].result,
         target="candidate",
+        severity_level=DEBUG,
     )
     subtree_filter = (
         """<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native"></native>"""
     )
-    task.run(
+    candidate = task.run(
         netconf_get_config,
         source="candidate",
         path=subtree_filter,
         filter_type="subtree",
+        severity_level=DEBUG,
+        name="netconf_get_config_candidate",
     )
-    # task.run(netconf_lock, datastore="candidate", operation="unlock")
-    if not candidate:
+    if not task.is_dry_run():
         task.run(netconf_commit)
     else:
         task.run(netconf_validate)
+        running = task.run(
+            netconf_get_config,
+            source="running",
+            path=subtree_filter,
+            filter_type="subtree",
+            severity_level=DEBUG,
+            name="netconf_get_config_running",
+        )
+        task.run(diff, running=running, candidate=candidate)
+    task.run(
+        netconf_lock,
+        datastore="candidate",
+        operation="unlock",
+        severity_level=DEBUG,
+        name="unlock_candidate",
+    )

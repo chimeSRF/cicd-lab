@@ -1,4 +1,5 @@
 import typer
+from logging import DEBUG, INFO
 from rich.console import Console
 from nornir import InitNornir
 from nornir_utils.plugins.functions import print_result
@@ -33,7 +34,9 @@ def get_nornir(
     """
     Get nornir object from configuration file
     """
-    nr = InitNornir(config_file=str(configuration_file))
+
+    deploy = ctx.invoked_subcommand == "deploy"
+    nr = InitNornir(config_file=str(configuration_file), dry_run=not deploy)
 
     # Hack to set the hostnames according to the pod number
     for host in nr.inventory.hosts:
@@ -50,11 +53,11 @@ def get_config(ctx: typer.Context) -> None:
 
 
 @app.command()
-def validate(ctx: typer.Context) -> None:
+def validate(ctx: typer.Context, debug: bool = False) -> None:
     """Load configuration into candidate store and exit with validate"""
     nr = ctx.obj
-    result = nr.run(task=edit_config, nr=nr, candidate=True)
-    print_result(result)
+    result = nr.run(task=edit_config, nr=nr)
+    print_result(result, severity_level=DEBUG if debug else INFO)
     if result.failed:
         console.print("Validation failed")
         raise typer.Exit(code=1)
@@ -63,11 +66,11 @@ def validate(ctx: typer.Context) -> None:
 
 
 @app.command()
-def deploy(ctx: typer.Context) -> None:
+def deploy(ctx: typer.Context, debug: bool = False) -> None:
     """Deploy configuration into running store"""
     nr = ctx.obj
-    result = nr.run(task=edit_config, nr=nr, candidate=False)
-    print_result(result)
+    result = nr.run(task=edit_config, nr=nr)
+    print_result(result, severity_level=DEBUG if debug else INFO)
     print(f"Failed hosts: {result.failed_hosts}")
     if result.failed:
         console.print("Deployment failed")

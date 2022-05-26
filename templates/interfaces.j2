@@ -41,18 +41,39 @@
     {% else %}
         {% include "interface_disabled.j2" +%}
     {% endif %}
+    
+    
+    {# Default settings to make the xml diff look better because of the replace mode #}
+    {% if not interface or interface["type"] != "access"%}
+    <switchport>
+        <trunk
+            xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-switch">
+            <native>
+                <vlan-config>
+                    <tag>true</tag>
+                </vlan-config>
+            </native>
+        </trunk>
+    </switchport>
+    {% endif %}
     <logging>
         <event>
             <link-status/>
         </event>
     </logging>
-    <cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-cdp">
+    <cdp
+        xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-cdp">
         <tlv>
-            <app/>
+            <app></app>
             <server-location/>
             <location/>
         </tlv>
     </cdp>
+    <cts xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-cts">
+    <role-based>
+      <enforcement-switching>false</enforcement-switching>
+    </role-based>
+    </cts>
 </{{ interface_type }}>
 {% endfor %}
 {% if "nets" in host %}

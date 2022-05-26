@@ -12,6 +12,7 @@ nornir-utils = "^0.2.0"
 nornir-jinja2 = "^0.2.0"
 rich = "^12.4.1"
 nornir-netconf = "^1.0.1"
+xmldiff = "^2.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7"
