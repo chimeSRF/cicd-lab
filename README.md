@@ -28,7 +28,7 @@ graph LR
     sw04 -- access ports --- pc2{PC02}
 ```
 
-**Note:** With `ip unnumberd` the interface itself does not need an IP address on the point-to-point links. Because we don't have an IPAM this makes the inventory easier.{: .note}
+**Note:** With `ip unnumberd` the interface itself does not need an IP address on the point-to-point links. Because we don't have an IPAM this makes the inventory easier.
 
 ## Environment Variable
 
