@@ -2,7 +2,8 @@ import typer
 from logging import DEBUG, INFO
 from rich.console import Console
 from nornir import InitNornir
-from nornir_utils.plugins.functions import print_result
+# from nornir_utils.plugins.functions import print_result
+from nornir_rich.functions import print_result
 
 from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp, desired_rpc, edit_config
 
@@ -14,7 +15,7 @@ console = Console()
 def get_nornir(
     ctx: typer.Context,
     configuration_file: typer.FileText = typer.Option(
-        ...,
+        "config.yaml",
         exists=True,
         file_okay=True,
         dir_okay=False,
@@ -40,7 +41,7 @@ def get_nornir(
 
     # Hack to set the hostnames according to the pod number
     for host in nr.inventory.hosts:
-        nr.inventory.hosts[host].hostname = f"{host}-pod-{pod_number}.lab.ins.hsr.ch"
+        nr.inventory.hosts[host].hostname = f"{host}-pod-{pod_number}.network.garden"
     ctx.obj = nr
 
 
@@ -83,7 +84,7 @@ def deploy(ctx: typer.Context, debug: bool = False) -> None:
 def desired_state(ctx: typer.Context) -> None:
     """Get desired state"""
     nr = ctx.obj
-    print_result(nr.run(task=desired_rpc, nr=nr))
+    print_result(nr.run(task=desired_rpc))
 
 
 if __name__ == "__main__":

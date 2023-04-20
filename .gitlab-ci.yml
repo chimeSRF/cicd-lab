@@ -1,7 +1,7 @@
 demo:
   before_script:
-    - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-    - export PATH="$PATH:$HOME/.poetry/bin/"
+    - pip install lxml
+    - curl -sSL https://install.python-poetry.org | python3 -
     # - poetry config virtualenvs.create false
     - poetry config virtualenvs.in-project true # for caching
     - poetry install --no-interaction --no-ansi

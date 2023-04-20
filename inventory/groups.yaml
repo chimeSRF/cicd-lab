@@ -6,7 +6,7 @@ iosxe:
   platform: iosxe
   port: 830
   connection_options:
-    netconf:
+    nc:
       extras:
         hostkey_verify: false
         timeout: 300
