@@ -591,22 +591,6 @@ jinja2 = ">=2.11.2,<4"
 nornir = ">=3,<4"
 
 [[package]]
-name = "nornir-netconf"
-version = "2.0.0"
-description = "NETCONF plugin for Nornir"
-category = "main"
-optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "nornir_netconf-2.0.0-py3-none-any.whl", hash = "sha256:44724f2909476cfecbdb9d9f77717321b8c7e4d43391c3351142f603ccce570b"},
-    {file = "nornir_netconf-2.0.0.tar.gz", hash = "sha256:47b20ba5e7be05cee80859ba027af1752c948bab140d3affed7a6d1228fd3951"},
-]
-
-[package.dependencies]
-ncclient = ">=0.6.9,<0.7.0"
-nornir = ">=3.0.0,<4.0.0"
-
-[[package]]
 name = "nornir-rich"
 version = "0.1.5"
 description = "Collection of 'nice looking' functions with rich for nornir"
@@ -968,25 +952,6 @@ files = [
 ]
 
 [[package]]
-name = "xmldiff"
-version = "2.6.1"
-description = "Creates diffs of XML files"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "xmldiff-2.6.1-py3-none-any.whl", hash = "sha256:6ad5eb62cec5512103059bcef9663f2c0e10bc694acc3e325c7fea1e14ff6986"},
-    {file = "xmldiff-2.6.1.tar.gz", hash = "sha256:81b817ef2fd0de9b30336b47fd1d4648c99b30685024a07bc34f2c146404e159"},
-]
-
-[package.dependencies]
-lxml = ">=3.1.0"
-setuptools = "*"
-
-[package.extras]
-devenv = ["black", "coverage", "flake8", "zest.releaser[recommended]"]
-
-[[package]]
 name = "zipp"
 version = "3.15.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -1005,4 +970,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "66771095f98b6b5ffb15b963b4b57706fcd957f8b1871f2ca2e8f3cf559adaab"
+content-hash = "537699c0a00513f98984eecc422bd00ace20e3389d02a1de2f64f860155dbdce"
