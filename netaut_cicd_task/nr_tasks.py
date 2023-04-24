@@ -1,4 +1,5 @@
 from logging import DEBUG
+from typing import List
 from nornir.core.task import Task, Result, MultiResult
 from nornir.core.filter import F
 
@@ -35,6 +36,85 @@ def netconf_validate(
 ) -> Result:
     manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     rpc = manager.validate()
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_lock(task: Task, target: str) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.lock(target=target)
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_unlock(task: Task, target: str) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.unlock(target=target)
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_edit_config(task: Task, target: str, default_operation: str, config: str) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.edit_config(
+        config,
+        target=target,
+        default_operation=default_operation
+    )
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_get_config(task: Task, source: str, models: List) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    loaded_models = manager.models_loaded
+    available_models = manager.models_loadable
+
+    if not set(models).issubset(set(available_models)):
+        raise("not all models are part of available models")
+
+    for m in models:
+        if m not in loaded_models:
+            manager.load_model(m)
+
+    rpc = manager.get_config(
+        models=models,
+        source=source
+    )
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_commit(task: Task) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    rpc = manager.commit()
     result = {
         "error": rpc.error,
         "errors": rpc.errors,
@@ -87,47 +167,55 @@ def desired_rpc(task: Task) -> None:
 
 def diff(task: Task, running: Config, candidate: Config) -> Result:
     delta = ConfigDelta(config_src=running, config_dst=candidate)
+    is_changed = True
 
-    return Result(task.host, result=str(delta) or "No diff", failed=False)
+    empty_diff = '<nc:config xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0"/>'
+
+    if (str(delta)).strip() == empty_diff:
+        delta = "No diff"
+        is_changed = False
+
+    return Result(task.host, result=str(delta), failed=False, changed=is_changed)
 
 
-def edit_config(task: Task) -> None:
+def deploy_config(task: Task) -> None:
     desired_result = task.run(desired_rpc, severity_level=DEBUG)
     task.run(discard_config, severity_level=DEBUG)
 
     m = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
 
-    rpc_lock = m.lock(target="candidate")
-    assert(rpc_lock.ok)
+    task.run(netconf_lock, target="candidate", severity_level=DEBUG)
 
-    rpc_edit_can = m.edit_config(
-        desired_result[0].result,
+    task.run(
+        netconf_edit_config,
+        config=desired_result[0].result,
         target="candidate",
-        default_operation="merge"
+        default_operation="merge",
+        severity_level=DEBUG
     )
-    assert(rpc_edit_can.ok)
 
-
-    m.load_model('Cisco-IOS-XE-native')
-    candidate = m.get_config(
+    candidate_result = task.run(
+        netconf_get_config,
         models=['Cisco-IOS-XE-native'],
         source="candidate",
+        severity_level=DEBUG
     )
-    assert(candidate.ok)
 
     if not task.is_dry_run():
-        rpc_com = m.commit()
-        assert(rpc_com.ok)
+        task.run(netconf_commit, severity_level=DEBUG)
     else:
-        task.run(netconf_validate)
+        task.run(netconf_validate, severity_level=DEBUG)
 
-        running = m.get_config(
+        running_result = task.run(
+            netconf_get_config,
             models=['Cisco-IOS-XE-native'],
             source="running",
+            severity_level=DEBUG
         )
-        assert(running.ok)
-
-        task.run(diff, running=m.extract_config(running), candidate=m.extract_config(candidate))
+        task.run(
+            diff,
+            running=m.extract_config(running_result.result['rpc']),
+            candidate=m.extract_config(candidate_result.result['rpc'])
+        )
     
-    rpc_unlock = m.unlock(target="candidate")
-    assert(rpc_unlock.ok)
+    task.run(netconf_unlock, target="candidate", severity_level=DEBUG)

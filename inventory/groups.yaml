@@ -19,7 +19,7 @@ iosxe:
 .vrf_definitions:
   vrfs:
     students: &students
-      description: "Students VRF"
+      description: "Students VRF 1"
       id: 10  # RD will be <Loopback0>:10
       import:
         - !!str 10:0

@@ -5,7 +5,7 @@ from nornir import InitNornir
 # from nornir_utils.plugins.functions import print_result
 from nornir_rich.functions import print_result
 
-from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp, desired_rpc, edit_config
+from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp, desired_rpc, deploy_config
 
 app = typer.Typer()
 console = Console()
@@ -57,7 +57,7 @@ def get_config(ctx: typer.Context) -> None:
 def validate(ctx: typer.Context, debug: bool = False) -> None:
     """Load configuration into candidate store and exit with validate"""
     nr = ctx.obj
-    result = nr.run(task=edit_config)
+    result = nr.run(task=deploy_config)
     print_result(result, severity_level=DEBUG if debug else INFO)
     if result.failed:
         console.print("Validation failed")
@@ -70,7 +70,7 @@ def validate(ctx: typer.Context, debug: bool = False) -> None:
 def deploy(ctx: typer.Context, debug: bool = False) -> None:
     """Deploy configuration into running store"""
     nr = ctx.obj
-    result = nr.run(task=edit_config)
+    result = nr.run(task=deploy_config)
     print_result(result, severity_level=DEBUG if debug else INFO)
     print(f"Failed hosts: {result.failed_hosts}")
     if result.failed:
