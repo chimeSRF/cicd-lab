@@ -1,13 +1,12 @@
 from logging import DEBUG
 from typing import List
-from nornir.core.task import Task, Result, MultiResult
+from nornir.core.task import Task, Result
 from nornir.core.filter import F
-
-from netaut_cicd_task.filter import split_interface, first_host, networkmask
-
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from nornir_jinja2.plugins.tasks import template_file
 
 from ncdiff import ConfigDelta, Config
+
+from netaut_cicd_task.filter import split_interface, first_host, networkmask
 from netaut_cicd_task.plugins.connections import CONNECTION_NAME
 
 finja_filter = {
@@ -69,12 +68,12 @@ def netconf_unlock(task: Task, target: str) -> Result:
     return Result(host=task.host, result=result, failed=not rpc.ok)
 
 
-def netconf_edit_config(task: Task, target: str, default_operation: str, config: str) -> Result:
+def netconf_edit_config(
+    task: Task, target: str, default_operation: str, config: str
+) -> Result:
     manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     rpc = manager.edit_config(
-        config,
-        target=target,
-        default_operation=default_operation
+        config, target=target, default_operation=default_operation
     )
     result = {
         "error": rpc.error,
@@ -85,23 +84,20 @@ def netconf_edit_config(task: Task, target: str, default_operation: str, config:
     return Result(host=task.host, result=result, failed=not rpc.ok)
 
 
-def netconf_get_config(task: Task, source: str, models: List) -> Result:
+def netconf_get_config(task: Task, source: str, models: List[str]) -> Result:
     manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
 
     loaded_models = manager.models_loaded
     available_models = manager.models_loadable
 
     if not set(models).issubset(set(available_models)):
-        raise("not all models are part of available models")
+        raise Exception("not all models are part of available models")
 
     for m in models:
         if m not in loaded_models:
             manager.load_model(m)
 
-    rpc = manager.get_config(
-        models=models,
-        source=source
-    )
+    rpc = manager.get_config(models=models, source=source)
     result = {
         "error": rpc.error,
         "errors": rpc.errors,
@@ -124,7 +120,7 @@ def netconf_commit(task: Task) -> Result:
     return Result(host=task.host, result=result, failed=not rpc.ok)
 
 
-def get_vrf_ospf_bgp(task: Task) -> None:
+def get_vrf_ospf_bgp(task: Task) -> Result:
     subtree_filter = """<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
         <vrf/>
         <vlan/>
@@ -140,7 +136,7 @@ def get_vrf_ospf_bgp(task: Task) -> None:
       </native>"""
 
     m = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
-    m.load_model('Cisco-IOS-XE-native')
+    m.load_model("Cisco-IOS-XE-native")
 
     filter_type = "subtree"
 
@@ -155,14 +151,14 @@ def desired_rpc(task: Task) -> None:
     rr_hosts = nr.filter(F(tags__contains="RR")).inventory.hosts  # type: ignore
     edge_hosts = nr.filter(F(tags__contains="edge")).inventory.hosts  # type: ignore
 
-    env = Environment(
-        loader=FileSystemLoader("templates"), undefined=StrictUndefined, trim_blocks=True,
+    task.run(
+        template_file,
+        template="native.j2",
+        path="templates",
+        jinja_filters=finja_filter,
+        rr_hosts=rr_hosts,
+        edge_hosts=edge_hosts,
     )
-    env.filters.update(finja_filter)
-    t = env.get_template("native.j2")
-    config = t.render(host=task.host, rr_hosts=rr_hosts, edge_hosts=edge_hosts)
-
-    return Result(host=task.host, result=config)
 
 
 def diff(task: Task, running: Config, candidate: Config) -> Result:
@@ -178,7 +174,7 @@ def diff(task: Task, running: Config, candidate: Config) -> Result:
     return Result(task.host, result=str(delta), failed=False, changed=is_changed)
 
 
-def deploy_config(task: Task) -> None:
+def deploy_config(task: Task) -> Result:
     desired_result = task.run(desired_rpc, severity_level=DEBUG)
     task.run(discard_config, severity_level=DEBUG)
 
@@ -188,17 +184,17 @@ def deploy_config(task: Task) -> None:
 
     task.run(
         netconf_edit_config,
-        config=desired_result[0].result,
+        config=desired_result[1].result,
         target="candidate",
         default_operation="merge",
-        severity_level=DEBUG
+        severity_level=DEBUG,
     )
 
     candidate_result = task.run(
         netconf_get_config,
-        models=['Cisco-IOS-XE-native'],
+        models=["Cisco-IOS-XE-native"],
         source="candidate",
-        severity_level=DEBUG
+        severity_level=DEBUG,
     )
 
     if not task.is_dry_run():
@@ -208,14 +204,16 @@ def deploy_config(task: Task) -> None:
 
         running_result = task.run(
             netconf_get_config,
-            models=['Cisco-IOS-XE-native'],
+            models=["Cisco-IOS-XE-native"],
             source="running",
-            severity_level=DEBUG
+            severity_level=DEBUG,
         )
         task.run(
             diff,
-            running=m.extract_config(running_result.result['rpc']),
-            candidate=m.extract_config(candidate_result.result['rpc'])
+            running=m.extract_config(running_result.result["rpc"]),
+            candidate=m.extract_config(candidate_result.result["rpc"]),
         )
-    
+
     task.run(netconf_unlock, target="candidate", severity_level=DEBUG)
+
+    return Result(host=task.host, result=True, severity_level=DEBUG)

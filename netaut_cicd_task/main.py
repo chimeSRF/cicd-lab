@@ -1,14 +1,16 @@
 import typer
+import json
 from logging import DEBUG, INFO
 from rich.console import Console
 from nornir import InitNornir
-# from nornir_utils.plugins.functions import print_result
+
 from nornir_rich.functions import print_result
 
 from netaut_cicd_task.nr_tasks import get_vrf_ospf_bgp, desired_rpc, deploy_config
 
 app = typer.Typer()
 console = Console()
+console_error = Console(stderr=True, style="red")
 
 
 @app.callback()
@@ -54,13 +56,24 @@ def get_config(ctx: typer.Context) -> None:
 
 
 @app.command()
-def validate(ctx: typer.Context, debug: bool = False) -> None:
+def validate(
+    ctx: typer.Context, debug: bool = False, json_output: bool = False
+) -> None:
     """Load configuration into candidate store and exit with validate"""
     nr = ctx.obj
     result = nr.run(task=deploy_config)
-    print_result(result, severity_level=DEBUG if debug else INFO)
+
+    if json_output:
+        return_data = {
+            host: multi_result[-2].result if not multi_result.failed else "Failed!!"
+            for host, multi_result in result.items()
+        }
+        print(json.dumps(return_data, indent=4))
+    else:
+        print_result(result, severity_level=DEBUG if debug else INFO)
+
     if result.failed:
-        console.print("Validation failed")
+        console_error.print("Validation failed")
         raise typer.Exit(code=1)
     console.print("Validation successful")
     raise typer.Exit(code=0)
@@ -72,9 +85,9 @@ def deploy(ctx: typer.Context, debug: bool = False) -> None:
     nr = ctx.obj
     result = nr.run(task=deploy_config)
     print_result(result, severity_level=DEBUG if debug else INFO)
-    print(f"Failed hosts: {result.failed_hosts}")
+    console.print(f"Failed hosts: {result.failed_hosts}")
     if result.failed:
-        console.print("Deployment failed")
+        console_error.print("Deployment failed")
         raise typer.Exit(code=1)
     console.print("Deployment successful")
     raise typer.Exit(code=0)
