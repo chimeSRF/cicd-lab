@@ -6,7 +6,7 @@ iosxe:
   platform: iosxe
   port: 830
   connection_options:
-    netconf:
+    nc:
       extras:
         hostkey_verify: false
         timeout: 300
@@ -19,7 +19,7 @@ iosxe:
 .vrf_definitions:
   vrfs:
     students: &students
-      description: "Students VRF"
+      description: "Students VRF 1"
       id: 10  # RD will be <Loopback0>:10
       import:
         - !!str 10:0

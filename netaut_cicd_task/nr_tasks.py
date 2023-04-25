@@ -1,17 +1,13 @@
 from logging import DEBUG
-from nornir.core import Nornir
-from nornir.core.task import Task, Result, MultiResult
+from typing import List
+from nornir.core.task import Task, Result
 from nornir.core.filter import F
-from nornir_netconf.plugins.tasks import (
-    netconf_get_config,
-    netconf_edit_config,
-    netconf_commit,
-    netconf_lock,
-)
 from nornir_jinja2.plugins.tasks import template_file
-from xmldiff import main as xmldiff_main
+
+from ncdiff import ConfigDelta, Config
 
 from netaut_cicd_task.filter import split_interface, first_host, networkmask
+from netaut_cicd_task.plugins.connections import CONNECTION_NAME
 
 finja_filter = {
     "split_interface": split_interface,
@@ -23,7 +19,7 @@ finja_filter = {
 def discard_config(
     task: Task,
 ) -> Result:
-    manager = task.host.get_connection("netconf", task.nornir.config)
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     rpc = manager.discard_changes()
     result = {
         "error": rpc.error,
@@ -37,7 +33,7 @@ def discard_config(
 def netconf_validate(
     task: Task,
 ) -> Result:
-    manager = task.host.get_connection("netconf", task.nornir.config)
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
     rpc = manager.validate()
     result = {
         "error": rpc.error,
@@ -48,7 +44,83 @@ def netconf_validate(
     return Result(host=task.host, result=result, failed=not rpc.ok)
 
 
-def get_vrf_ospf_bgp(task: Task) -> None:
+def netconf_lock(task: Task, target: str) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.lock(target=target)
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_unlock(task: Task, target: str) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.unlock(target=target)
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_edit_config(
+    task: Task, target: str, default_operation: str, config: str
+) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    rpc = manager.edit_config(
+        config, target=target, default_operation=default_operation
+    )
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_get_config(task: Task, source: str, models: List[str]) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    loaded_models = manager.models_loaded
+    available_models = manager.models_loadable
+
+    if not set(models).issubset(set(available_models)):
+        raise Exception("not all models are part of available models")
+
+    for m in models:
+        if m not in loaded_models:
+            manager.load_model(m)
+
+    rpc = manager.get_config(models=models, source=source)
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def netconf_commit(task: Task) -> Result:
+    manager = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    rpc = manager.commit()
+    result = {
+        "error": rpc.error,
+        "errors": rpc.errors,
+        "ok": rpc.ok,
+        "rpc": rpc,
+    }
+    return Result(host=task.host, result=result, failed=not rpc.ok)
+
+
+def get_vrf_ospf_bgp(task: Task) -> Result:
     subtree_filter = """<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
         <vrf/>
         <vlan/>
@@ -63,18 +135,22 @@ def get_vrf_ospf_bgp(task: Task) -> None:
         </router>
       </native>"""
 
-    task.run(
-        netconf_get_config,
-        source="running",
-        path=subtree_filter,
-        filter_type="subtree",
-    )
+    m = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+    m.load_model("Cisco-IOS-XE-native")
+
+    filter_type = "subtree"
+
+    rpc = m.get_config(filter=(filter_type, subtree_filter))
+    config = m.extract_config(rpc)
+
+    return Result(host=task.host, result=str(config), failed=not rpc.ok)
 
 
 def desired_rpc(task: Task) -> None:
     nr = task.nornir
     rr_hosts = nr.filter(F(tags__contains="RR")).inventory.hosts  # type: ignore
     edge_hosts = nr.filter(F(tags__contains="edge")).inventory.hosts  # type: ignore
+
     task.run(
         template_file,
         template="native.j2",
@@ -85,70 +161,59 @@ def desired_rpc(task: Task) -> None:
     )
 
 
-def diff(task: Task, running: MultiResult, candidate: MultiResult) -> Result:
-    diff_options = {
-        "F": 0.5,
-        "uniqueattrs": [
-            "{http://www.w3.org/XML/1998/namespace}id",
-        ],
-        "ratio_mode": "accurate",
-    }
-    running = running[0].result["rpc"].data  # type: ignore
-    candidate = candidate[0].result["rpc"].data  # type: ignore
+def diff(task: Task, running: Config, candidate: Config) -> Result:
+    delta = ConfigDelta(config_src=running, config_dst=candidate)
+    is_changed = True
 
-    diff = xmldiff_main.diff_trees(
-        running,
-        candidate,
-        diff_options=diff_options,
-    )
+    empty_diff = '<nc:config xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0"/>'
 
-    return Result(task.host, result=diff or "No diff", failed=False)
+    if (str(delta)).strip() == empty_diff:
+        delta = "No diff"
+        is_changed = False
+
+    return Result(task.host, result=str(delta), failed=False, changed=is_changed)
 
 
-def edit_config(task: Task) -> None:
+def deploy_config(task: Task) -> Result:
     desired_result = task.run(desired_rpc, severity_level=DEBUG)
     task.run(discard_config, severity_level=DEBUG)
-    task.run(
-        netconf_lock,
-        datastore="candidate",
-        operation="lock",
-        severity_level=DEBUG,
-        name="lock_candidate",
-    )
+
+    m = task.host.get_connection(CONNECTION_NAME, task.nornir.config)
+
+    task.run(netconf_lock, target="candidate", severity_level=DEBUG)
+
     task.run(
         netconf_edit_config,
         config=desired_result[1].result,
         target="candidate",
+        default_operation="merge",
         severity_level=DEBUG,
     )
-    subtree_filter = (
-        """<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native"></native>"""
-    )
-    candidate = task.run(
+
+    candidate_result = task.run(
         netconf_get_config,
+        models=["Cisco-IOS-XE-native"],
         source="candidate",
-        path=subtree_filter,
-        filter_type="subtree",
         severity_level=DEBUG,
-        name="netconf_get_config_candidate",
     )
+
     if not task.is_dry_run():
-        task.run(netconf_commit)
+        task.run(netconf_commit, severity_level=DEBUG)
     else:
-        task.run(netconf_validate)
-        running = task.run(
+        task.run(netconf_validate, severity_level=DEBUG)
+
+        running_result = task.run(
             netconf_get_config,
+            models=["Cisco-IOS-XE-native"],
             source="running",
-            path=subtree_filter,
-            filter_type="subtree",
             severity_level=DEBUG,
-            name="netconf_get_config_running",
         )
-        task.run(diff, running=running, candidate=candidate)
-    task.run(
-        netconf_lock,
-        datastore="candidate",
-        operation="unlock",
-        severity_level=DEBUG,
-        name="unlock_candidate",
-    )
+        task.run(
+            diff,
+            running=m.extract_config(running_result.result["rpc"]),
+            candidate=m.extract_config(candidate_result.result["rpc"]),
+        )
+
+    task.run(netconf_unlock, target="candidate", severity_level=DEBUG)
+
+    return Result(host=task.host, result=True, severity_level=DEBUG)
