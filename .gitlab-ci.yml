@@ -22,6 +22,8 @@ build:
     - export PATH="/root/.local/bin:$PATH"
     - poetry config virtualenvs.in-project true
     - poetry install --no-interaction --no-ansi
+  tags:
+  - ins-student
   script:
     - poetry run netaut --help
 
