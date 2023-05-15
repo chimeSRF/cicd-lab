@@ -32,7 +32,8 @@ test:
   stage: test
   image: python:$PYTHON_VERSION
   script:
-    - echo "Testing..." # Replace with your actual test command
+    - poetry run netaut validate
+    - poetry run netaut get-config
   only:
     - develop
     - feature/*
@@ -41,21 +42,9 @@ deploy:
   stage: deploy
   image: python:$PYTHON_VERSION
   script:
-    - echo "Deploying..." # Replace with your actual deploy command
+    - poetry run netaut deploy
   environment: 
     name: production
   only:
     - master
   when: manual
-
-  after_script:
-  - |
-    if [ "$CI_PIPELINE_STATUS" = "success" ]; then
-      curl --request POST --header "PRIVATE-TOKEN: <your_private_token>" \
-        --data "body=Pipeline $CI_PIPELINE_ID succeeded! Deployed to $CI_ENVIRONMENT_NAME" \
-        "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
-    else
-      curl --request POST --header "PRIVATE-TOKEN: <your_private_token>" \
-        --data "body=Pipeline $CI_PIPELINE_ID failed!" \
-        "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
-    fi
