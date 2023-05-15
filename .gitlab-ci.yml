@@ -27,14 +27,16 @@ build:
     - poetry install --no-interaction --no-ansi
     - poetry run netaut --help
   artifacts:
-    paths:
-      - .venv/
+    - .venv/
 
 test:
   stage: test
   image: python:$PYTHON_VERSION
-  before_script:
-    - export PATH="/root/.local/bin:$PATH"
+  needs:
+    - job: build
+      artifacts: true
+  dependencies:
+    - build
   script:
     - poetry run netaut validate
     - poetry run netaut get-config
