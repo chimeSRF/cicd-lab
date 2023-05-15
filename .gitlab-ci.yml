@@ -24,9 +24,6 @@ build:
     - poetry install --no-interaction --no-ansi
   script:
     - poetry run netaut --help
-  only:
-    - develop
-    - feature/*
 
 test:
   stage: test
@@ -34,9 +31,6 @@ test:
   script:
     - poetry run netaut validate
     - poetry run netaut get-config
-  only:
-    - develop
-    - feature/*
 
 deploy:
   stage: deploy
