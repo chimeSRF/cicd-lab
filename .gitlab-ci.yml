@@ -1,19 +1,61 @@
-demo:
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  PYTHON_VERSION: "3.9"
+
+cache:
+  key: "project-${CI_JOB_NAME}-py3.9"
+  paths:
+    - .cache/pip
+    - .venv
+    - yang
+
+build:
+  stage: build
+  image: python:$PYTHON_VERSION
   before_script:
     - pip install lxml
     - curl -sSL https://install.python-poetry.org | python3 -
     - export PATH="/root/.local/bin:$PATH"
-    - poetry config virtualenvs.in-project true # for caching
+    - poetry config virtualenvs.in-project true
     - poetry install --no-interaction --no-ansi
-  tags:
-    - ins-student
-  image: python:3.9
-  script: poetry run netaut --help
-  cache:
-    - key: "project-${CI_JOB_NAME}-py3.9"
-      paths:
-      - .cache/pip
-      - .venv
-    - key: "project-${CI_JOB_NAME}-yang"
-      paths:
-      - yang
+  script:
+    - poetry run netaut --help
+  only:
+    - develop
+    - feature/*
+
+test:
+  stage: test
+  image: python:$PYTHON_VERSION
+  script:
+    - echo "Testing..." # Replace with your actual test command
+  only:
+    - develop
+    - feature/*
+
+deploy:
+  stage: deploy
+  image: python:$PYTHON_VERSION
+  script:
+    - echo "Deploying..." # Replace with your actual deploy command
+  environment: 
+    name: production
+  only:
+    - master
+  when: manual
+
+  after_script:
+  - |
+    if [ "$CI_PIPELINE_STATUS" = "success" ]; then
+      curl --request POST --header "PRIVATE-TOKEN: <your_private_token>" \
+        --data "body=Pipeline $CI_PIPELINE_ID succeeded! Deployed to $CI_ENVIRONMENT_NAME" \
+        "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+    else
+      curl --request POST --header "PRIVATE-TOKEN: <your_private_token>" \
+        --data "body=Pipeline $CI_PIPELINE_ID failed!" \
+        "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+    fi
