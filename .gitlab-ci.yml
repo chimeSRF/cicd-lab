@@ -6,12 +6,6 @@ stages:
 variables:
   PYTHON_VERSION: "3.9"
 
-cache:
-  key: "project-${CI_JOB_NAME}-py3.9"
-  paths:
-    - .cache/pip
-    - yang
-
 build:
   stage: build
   image: python:$PYTHON_VERSION
@@ -19,16 +13,18 @@ build:
     - pip install lxml
     - curl -sSL https://install.python-poetry.org | python3 -
     - export PATH="/root/.local/bin:$PATH"
-    - poetry config virtualenvs.in-project true
+    - poetry config virtualenvs.in-project true # for caching
     - poetry install --no-interaction --no-ansi
   tags:
-  - ins-student
+    - ins-student
   script:
-    - poetry install --no-interaction --no-ansi
     - poetry run netaut --help
   artifacts:
-    path:
-      - .venv/
+    paths:
+      - ".venv"
+    untracked: false
+    when: on_success
+    expire_in: "30 days"
 
 test:
   stage: test
@@ -45,8 +41,6 @@ test:
 deploy:
   stage: deploy
   image: python:$PYTHON_VERSION
-  before_script:
-    - export PATH="/root/.local/bin:$PATH"
   script:
     - poetry run netaut deploy
   environment: 
