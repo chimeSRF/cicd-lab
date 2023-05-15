@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+typer = "*"
+rich = "*"
+nornir = "*"
+nornir-rich = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

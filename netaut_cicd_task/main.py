@@ -40,6 +40,7 @@ def get_nornir(
 
     deploy = ctx.invoked_subcommand == "deploy"
     nr = InitNornir(config_file=str(configuration_file), dry_run=not deploy)
+    nr.inventory.defaults.password = "ins@lab"
 
     # Hack to set the hostnames according to the pod number
     for host in nr.inventory.hosts:
