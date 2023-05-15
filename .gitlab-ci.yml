@@ -27,7 +27,8 @@ build:
     - poetry install --no-interaction --no-ansi
     - poetry run netaut --help
   artifacts:
-    - .venv/
+    path:
+      - .venv/
 
 test:
   stage: test
