@@ -10,7 +10,6 @@ cache:
   key: "project-${CI_JOB_NAME}-py3.9"
   paths:
     - .cache/pip
-    - .venv
     - yang
 
 build:
@@ -25,11 +24,17 @@ build:
   tags:
   - ins-student
   script:
+    - poetry install --no-interaction --no-ansi
     - poetry run netaut --help
+  artifacts:
+    paths:
+      - .venv/
 
 test:
   stage: test
   image: python:$PYTHON_VERSION
+  before_script:
+    - export PATH="/root/.local/bin:$PATH"
   script:
     - poetry run netaut validate
     - poetry run netaut get-config
@@ -37,6 +42,8 @@ test:
 deploy:
   stage: deploy
   image: python:$PYTHON_VERSION
+  before_script:
+    - export PATH="/root/.local/bin:$PATH"
   script:
     - poetry run netaut deploy
   environment: 
