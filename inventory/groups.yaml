@@ -3,6 +3,7 @@
 
 iosxe:
   username: ins
+  password: ins@lab
   platform: iosxe
   port: 830
   connection_options:
