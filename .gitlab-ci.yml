@@ -5,6 +5,7 @@ stages:
 
 variables:
   PYTHON_VERSION: "3.9"
+  POD_NUMBER: 8
 
 cache:
   key: "project-${CI_JOB_NAME}-py3.9"
@@ -33,8 +34,8 @@ test:
   stage: test
   image: python:$PYTHON_VERSION
   script:
-    - poetry run netaut validate
-    - poetry run netaut get-config
+    - poetry run netaut --pod-number $POD_NUMBER validate
+    - poetry run netaut --pod-number $POD_NUMBER get-config
 
 deploy:
   stage: deploy
