@@ -26,15 +26,16 @@ test_poetry:
   image: python:$PYTHON_VERSION
   script:
     - poetry run netaut --help
+    - poetry run netaut --pod-number $POD_NUMBER get-config
   artifacts:
     paths:
       - .venv/
 
-test_commands:
-  stage: test
-  image: python:$PYTHON_VERSION
-  script:
-    - poetry run netaut --pod-number $POD_NUMBER get-config
+#test_commands:
+#  stage: test
+#  image: python:$PYTHON_VERSION
+#  script:
+#    - poetry run netaut --pod-number $POD_NUMBER get-config
 
 deploy:
   stage: deploy
