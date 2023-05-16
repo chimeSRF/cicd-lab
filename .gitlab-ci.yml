@@ -29,7 +29,12 @@ setup_poetry:
   script:
     - poetry run netaut --help
   artifacts:
-    - ".venv"
+    paths:
+      - ".venv"
+    untracked: false
+    when: on_success
+    expire_in: "30 days"
+
 
 test_connection:
   stage: test
