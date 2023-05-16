@@ -13,24 +13,25 @@ cache:
     - .cache/pip
     - yang
 
-before_script:
-  - pip install lxml
-  - curl -sSL https://install.python-poetry.org | python3 -
-  - export PATH="/root/.local/bin:$PATH"
-  - poetry config virtualenvs.in-project true
-  - poetry install --no-interaction --no-ansi
-  - source .venv/bin/activate
-
-test_poetry:
+setup_poetry:
   stage: build
   image: python:$PYTHON_VERSION
+  before_script:
+    - pip install lxml
+    - curl -sSL https://install.python-poetry.org | python3 -
+    - export PATH="/root/.local/bin:$PATH"
+    - poetry config virtualenvs.in-project true
+    - poetry install --no-interaction --no-ansi
+    - source .venv/bin/activate
   script:
     - poetry run netaut --help
   artifacts:
     paths:
       - .venv/
+      - .cache/pip
+      - yang
 
-ping_test:
+test_connection:
   stage: test
   image: appropriate/curl:latest
   script:
@@ -39,12 +40,17 @@ ping_test:
 test_commands:
   stage: test
   image: python:$PYTHON_VERSION
+  before_script:
+    - source .venv/bin/activate
   script:
     - poetry run netaut --pod-number $POD_NUMBER get-config
+  needs: ["test_connection"]
 
 deploy:
   stage: deploy
   image: python:$PYTHON_VERSION
+  before_script:
+    - source .venv/bin/activate
   script:
     - poetry run netaut deploy
   environment: 
