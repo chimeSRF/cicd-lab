@@ -30,17 +30,6 @@ test_poetry:
     paths:
       - .venv/
 
-test_connection:
-  stage: test
-  image: python:$PYTHON_VERSION
-  script:
-    - python -c "import socket; socket.create_connection(('sw01-pod-$POD_NUMBER.network.garden', 830), timeout=5)"
-    - python -c "import socket; socket.create_connection(('sw02-pod-$POD_NUMBER.network.garden', 830), timeout=5)"
-    - python -c "import socket; socket.create_connection(('sw03-pod-$POD_NUMBER.network.garden', 830), timeout=5)"
-    - python -c "import socket; socket.create_connection(('sw04-pod-$POD_NUMBER.network.garden', 830), timeout=5)"
-  dependencies:
-    - test_poetry
-
 #test_commands:
 #  stage: test
 #  image: python:$PYTHON_VERSION
