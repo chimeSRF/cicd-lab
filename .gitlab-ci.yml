@@ -21,7 +21,7 @@ before_script:
   - poetry install --no-interaction --no-ansi
   - source .venv/bin/activate
 
-build:
+test_poetry:
   stage: build
   image: python:$PYTHON_VERSION
   script:
@@ -30,7 +30,7 @@ build:
     paths:
       - .venv/
 
-test:
+test_commands:
   stage: test
   image: python:$PYTHON_VERSION
   script:
