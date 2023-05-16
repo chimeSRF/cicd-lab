@@ -32,12 +32,12 @@ test_poetry:
 
 test_connection:
   stage: test
-  image: python:$PYTHON_VERSION
+  image: appropriate/curl:latest
   script:
-    - ping -c 5 sw01-pod-$POD_NUMBER.network.garden -p 830
-    - ping -c 5 sw02-pod-$POD_NUMBER.network.garden -p 830
-    - ping -c 5 sw03-pod-$POD_NUMBER.network.garden -p 830
-    - ping -c 5 sw04-pod-$POD_NUMBER.network.garden -p 830
+    - nc -zv sw01-pod-$POD_NUMBER.network.garden 830 -w5
+    - nc -zv sw02-pod-$POD_NUMBER.network.garden 830 -w5
+    - nc -zv sw03-pod-$POD_NUMBER.network.garden 830 -w5
+    - nc -zv sw04-pod-$POD_NUMBER.network.garden 830 -w5
 
 #test_commands:
 #  stage: test
