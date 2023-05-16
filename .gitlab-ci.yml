@@ -7,18 +7,14 @@ variables:
   PYTHON_VERSION: "3.9"
   POD_NUMBER: 8
 
-cache:
+.cache: &cache
   key: "project-${CI_JOB_NAME}-py3.9"
   paths:
     - .cache/pip
     - yang
     - .venv/
 
-setup_poetry:
-  stage: build
-  image: python:$PYTHON_VERSION
-  tags:
-    - ins-student
+.python_before_script: &python_before_script
   before_script:
     - pip install lxml
     - curl -sSL https://install.python-poetry.org | python3 -
@@ -26,15 +22,19 @@ setup_poetry:
     - poetry config virtualenvs.in-project true
     - poetry install --no-interaction --no-ansi
     - source .venv/bin/activate
+
+.python_image: &python_image
+  image: python:$PYTHON_VERSION
+
+setup_poetry:
+  <<: *python_image
+  <<: *python_before_script
+  cache: *cache
+  stage: build
+  tags:
+    - ins-student
   script:
     - poetry run netaut --help
-  artifacts:
-    paths:
-      - ".venv"
-    untracked: false
-    when: on_success
-    expire_in: "30 days"
-
 
 test_connection:
   stage: test
@@ -45,22 +45,23 @@ test_connection:
     - ping -c 5 sw01-pod-$POD_NUMBER.network.garden
 
 test_commands:
+  <<: *python_image
+  <<: *python_before_script
+  cache: *cache
   stage: test
-  image: python:$PYTHON_VERSION
   tags:
     - ins-student
-  before_script:
-    - ls -la
-    - source .venv/bin/activate
   script:
     - poetry run netaut --pod-number $POD_NUMBER get-config
   needs: ["test_connection"]
 
 deploy:
+  <<: *python_image
+  <<: *python_before_script
+  cache: *cache
   stage: deploy
-  image: python:$PYTHON_VERSION
-  before_script:
-    - source .venv/bin/activate
+  tags:
+    - ins-student
   script:
     - poetry run netaut deploy
   environment: 
