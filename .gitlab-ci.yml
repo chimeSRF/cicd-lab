@@ -29,10 +29,7 @@ setup_poetry:
   script:
     - poetry run netaut --help
   artifacts:
-    paths:
-      - .venv/
-      - .cache/pip
-      - yang
+    - ".venv"
 
 test_connection:
   stage: test
