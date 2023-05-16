@@ -12,6 +12,7 @@ cache:
   paths:
     - .cache/pip
     - yang
+    - .venv/
 
 setup_poetry:
   stage: build
@@ -47,6 +48,7 @@ test_commands:
   tags:
     - ins-student
   before_script:
+    - ls -la
     - source .venv/bin/activate
   script:
     - poetry run netaut --pod-number $POD_NUMBER get-config
