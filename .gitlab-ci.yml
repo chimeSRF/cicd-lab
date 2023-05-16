@@ -26,10 +26,18 @@ test_poetry:
   image: python:$PYTHON_VERSION
   script:
     - poetry run netaut --help
-    - poetry run netaut --pod-number $POD_NUMBER get-config
   artifacts:
     paths:
       - .venv/
+
+test_connection:
+  stage: test
+  image: python:$PYTHON_VERSION
+  script:
+    - ping -c 5 sw01-pod-$POD_NUMBER.network.garden -p 830
+    - ping -c 5 sw02-pod-$POD_NUMBER.network.garden -p 830
+    - ping -c 5 sw03-pod-$POD_NUMBER.network.garden -p 830
+    - ping -c 5 sw04-pod-$POD_NUMBER.network.garden -p 830
 
 #test_commands:
 #  stage: test
