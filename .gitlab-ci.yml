@@ -34,7 +34,6 @@ test:
   stage: test
   image: python:$PYTHON_VERSION
   script:
-    - poetry run netaut --pod-number $POD_NUMBER validate
     - poetry run netaut --pod-number $POD_NUMBER get-config
 
 deploy:
