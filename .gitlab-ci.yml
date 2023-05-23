@@ -55,7 +55,7 @@ test_commands:
     - ins-student
   script:
     - poetry run netaut --help
-    - poetry run netaut --pod-number $POD_NUMBER get-config > blasmireis.txt
+    - poetry run netaut --pod-number 8 get-config > blasmireis.txt
   needs: ["test_connection"]
 
 deploy:
