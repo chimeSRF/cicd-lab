@@ -28,7 +28,8 @@ class Nc:
         }
         parameters.update(extras)
         self.connection = manager.connect(**parameters)
-        self.connection.scan_models(folder=f"./yang/{hostname}")
+        #self.connection.scan_models(folder=f"./yang/{hostname}")
+        self.connection.scan_models(folder=f"./yang")
 
     def close(self) -> None:
         self.connection.close_session()
