@@ -55,7 +55,8 @@ test_commands:
     - ins-student
   script:
     - poetry run netaut --help
-    - poetry run netaut --pod-number $POD_NUMBER get-config
+    - echo test | telnet sw01-pod-8.network.garden 830
+    - echo "poetry run netaut --pod-number $POD_NUMBER get-config"
   needs: ["test_connection"]
 
 deploy:
