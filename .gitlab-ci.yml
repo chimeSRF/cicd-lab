@@ -53,6 +53,7 @@ test_commands:
   tags:
     - ins-student
   script:
+    - poetry run netaut --help
     - poetry run netaut --pod-number $POD_NUMBER get-config
   needs: ["test_connection"]
 
