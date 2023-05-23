@@ -46,7 +46,7 @@ test_connection:
   script:
     - ping -c 5 sw01-pod-$POD_NUMBER.network.garden
 
-test_commands:
+test_commands2:
   <<: *python_image
   <<: *python_before_script
   cache: *cache
