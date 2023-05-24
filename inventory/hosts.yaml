@@ -93,6 +93,8 @@ sw03:
     Loopback0: 100.64.255.3
     interfaces:
       GigabitEthernet1/0/1:
+        type: access
+        network: student_net_1
       GigabitEthernet1/0/2:
       GigabitEthernet1/0/3:
       GigabitEthernet1/0/4:
