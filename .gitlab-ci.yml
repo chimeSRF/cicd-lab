@@ -69,7 +69,7 @@ validate_on_merge:
     - ins-student
   script:
     - echo "Running validate command on merge request"
-    - VALIDATE_RESULT=$(poetry run netaut validate)
+    - VALIDATE_RESULT=$(poetry run netaut --pod-number $POD_NUMBER validate)
     - echo $VALIDATE_RESULT > validate_result.txt
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
@@ -101,7 +101,7 @@ deploy:
   tags:
     - ins-student
   script:
-    - poetry run netaut deploy
+    - poetry run netaut --pod-number $POD_NUMBER deploy
   environment: 
     name: production
   only:
