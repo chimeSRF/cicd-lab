@@ -1,6 +1,8 @@
 stages:
   - build
   - test
+  - validate
+  - comment
   - deploy
 
 variables:
@@ -57,6 +59,42 @@ test_commands:
     - poetry run netaut --help
     - poetry run netaut --pod-number $POD_NUMBER get-config
   needs: ["test_connection"]
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop"'
+      when: always
+
+validate_on_merge:
+  <<: *python_image
+  <<: *python_before_script
+  cache: *cache
+  stage: validate
+  tags:
+    - ins-student
+  script:
+    - echo "Running validate command on merge request"
+    - VALIDATE_RESULT=$(poetry run netaut validate)
+    - echo $VALIDATE_RESULT > validate_result.txt
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+
+post_comment:
+  stage: comment
+  image: appropriate/curl:latest
+  tags:
+    - ins-student
+  script:
+    - >
+      curl --request POST --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" 
+      "https://gitlab.ost.ch//api/v4/projects/$GITLAB_ACCESS_TOKEN/merge_requests/$CI_MERGE_REQUEST_IID/notes" 
+      --data-urlencode "body=$(cat validate_result.txt)"
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
 
 deploy:
   <<: *python_image
@@ -71,4 +109,4 @@ deploy:
     name: production
   only:
     - master
-  when: manual
+  when: on_success
