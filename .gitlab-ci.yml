@@ -3,6 +3,7 @@ stages:
   - test
   - validate
   - comment
+  - merge
   - deploy
 
 variables:
@@ -94,7 +95,7 @@ post_comment:
   needs: ["validate_on_merge"]
 
 auto_merge:
-  stage: deploy
+  stage: merge
   image: appropriate/curl:latest
   script:
     - >
