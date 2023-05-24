@@ -59,9 +59,6 @@ test_commands:
     - poetry run netaut --help
     - poetry run netaut --pod-number $POD_NUMBER get-config
   needs: ["test_connection"]
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "develop"'
-      when: always
 
 validate_on_merge:
   <<: *python_image
