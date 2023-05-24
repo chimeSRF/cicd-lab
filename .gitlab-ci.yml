@@ -70,7 +70,10 @@ validate_on_merge:
   script:
     - echo "Running validate command on merge request"
     - VALIDATE_RESULT=$(poetry run netaut --pod-number $POD_NUMBER validate)
-    - echo $VALIDATE_RESULT > validate_result.txt
+    - echo $VALIDATE_RESULT > ./validate_result.txt
+  artifacts:
+    paths:
+    - validate_result.txt
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
       when: always
@@ -92,6 +95,7 @@ post_comment:
       when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: always
+  needs: ["validate_on_merge"]
 
 deploy:
   <<: *python_image
