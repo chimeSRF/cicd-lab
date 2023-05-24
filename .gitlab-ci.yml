@@ -23,7 +23,7 @@ variables:
     - pip install lxml
     - curl -sSL https://install.python-poetry.org | python3 -
     - export PATH="/root/.local/bin:$PATH"
-    - poetry config virtualenvs.in-project true
+    - poetry config virtualenvs.in-project true # for caching
     - poetry install --no-interaction --no-ansi
     - source .venv/bin/activate
 
