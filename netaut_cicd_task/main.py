@@ -74,9 +74,9 @@ def validate(
         print_result(result, severity_level=DEBUG if debug else INFO)
 
     if result.failed:
-        console_error.print("Validation failed")
+        console_error.print("\nValidation failed")
         raise typer.Exit(code=1)
-    console.print("Validation successful")
+    console.print("\nValidation successful")
     raise typer.Exit(code=0)
 
 
