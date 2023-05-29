@@ -3,6 +3,7 @@ stages:
   - test
   - validate
   - comment
+  - merge
   - deploy
 
 variables:
@@ -92,6 +93,24 @@ post_comment:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: always
   needs: ["validate_on_merge"]
+
+auto_merge:
+  stage: merge
+  image: appropriate/curl:latest
+  script:
+    - |
+      VALIDATION_STATUS=$(cat validate_result.txt| grep -oE 'Validation (successful|failed)$') 
+      echo "Validation status is: $VALIDATION_STATUS" # Added echo statement
+      if [ "$VALIDATION_STATUS" = "Validation successful" ]; then
+        curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/merge" -k
+      fi
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+  needs: ["post_comment", "validate_on_merge"]
+
 
 deploy:
   <<: *python_image
