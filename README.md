@@ -1,7 +1,7 @@
 # NetAut CI/CD Demo Project
 
 ## Video for this Lab:
-https://youtu.be/yU20E-uXVrI
+https://youtu.be/D05TUu2FU9w
 
 ## Topology
 
