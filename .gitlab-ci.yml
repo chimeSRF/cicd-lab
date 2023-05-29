@@ -105,9 +105,7 @@ auto_merge:
         curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" "https://gitlab.ost.ch/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/merge" -k
       fi
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature\// && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
       when: always
   needs: ["post_comment", "validate_on_merge"]
 
