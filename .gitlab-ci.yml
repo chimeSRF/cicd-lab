@@ -108,7 +108,6 @@ auto_merge:
       when: always
   needs: ["post_comment", "validate_on_merge"]
 
-
 deploy:
   <<: *python_image
   <<: *python_before_script
